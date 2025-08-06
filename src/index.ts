@@ -1,5 +1,15 @@
 import dotenv from "dotenv";
 dotenv.config();
+
+console.log("🚀 Starting Brainly Backend Server...");
+console.log("📦 Environment:", process.env.NODE_ENV || "development");
+console.log("🔧 Port:", process.env.PORT || 8000);
+
+// Validate required environment variables
+if (!process.env.JWT_SECRET) {
+  console.warn("⚠️ JWT_SECRET not set, using default (not recommended for production)");
+}
+
 import express, { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import "./db"; // Import to establish database connection
@@ -7,14 +17,6 @@ import { ContentModel, LinkModel, UserModel } from "./db";
 import { userMiddleware, AuthenticatedRequest } from "./middleware";
 import { randomString } from "./utils";
 import cors from "cors";
-
-
-
-
-// console.log("✅ Loaded Mongo URI:", process.env.MONGODB_URI); // 👈 Ye line add kar
-
-// Load environment variables
-dotenv.config();
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret123" ;
 const PORT = process.env.PORT || 8000;
@@ -173,12 +175,32 @@ app.get("/api/v1/brain/:shareLink", async (req: Request, res: Response) => {
   });
 });
 
-// ✅ Start Server
-app.listen(PORT, () => {
-  console.log(`Server started on port ${PORT}`);
-  console.log(`Environment: ${NODE_ENV}`);
-  console.log(`CORS Origins:`, allowedOrigins);
-}).on('error', (err: any) => {
-  console.error('Server failed to start:', err);
+// Global error handlers
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  // Application specific logging, throwing an error, or other logic here
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
   process.exit(1);
+});
+
+// ✅ Start Server
+const server = app.listen(PORT, () => {
+  console.log(`✅ Server started successfully on port ${PORT}`);
+  console.log(`📱 Environment: ${NODE_ENV}`);
+  console.log(`🌐 CORS Origins:`, allowedOrigins.length > 0 ? allowedOrigins : 'All origins allowed');
+  console.log(`🏥 Health check: http://localhost:${PORT}/api/v1/health`);
+}).on('error', (err: any) => {
+  console.error('❌ Server failed to start:', err);
+  process.exit(1);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('🔄 SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    console.log('✅ Process terminated');
+  });
 });
