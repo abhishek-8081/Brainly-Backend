@@ -28,7 +28,7 @@ const app = express();
 const allowedOrigins = [
   process.env.FRONTEND_URL_1,
   process.env.FRONTEND_URL_2,
-  process.env.FRONTEND_URL_PROD,
+  'https://brainly-frontend.netlify.app',
   'http://localhost:5173', // For local development
   'http://127.0.0.1:5173'  // For local development
 ].filter(Boolean) as string[]; // Remove undefined values and assert as string array
